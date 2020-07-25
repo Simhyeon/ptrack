@@ -1,0 +1,11 @@
+/home/simon/programming/rust/progress_tracker/target/debug/deps/proc_macro_error-db2ae101365ca7b9.rmeta: /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/lib.rs /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/dummy.rs /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/diagnostic.rs /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/macros.rs /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/imp/fallback.rs
+
+/home/simon/programming/rust/progress_tracker/target/debug/deps/libproc_macro_error-db2ae101365ca7b9.rlib: /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/lib.rs /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/dummy.rs /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/diagnostic.rs /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/macros.rs /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/imp/fallback.rs
+
+/home/simon/programming/rust/progress_tracker/target/debug/deps/proc_macro_error-db2ae101365ca7b9.d: /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/lib.rs /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/dummy.rs /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/diagnostic.rs /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/macros.rs /home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/imp/fallback.rs
+
+/home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/lib.rs:
+/home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/dummy.rs:
+/home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/diagnostic.rs:
+/home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/macros.rs:
+/home/simon/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro-error-0.4.12/src/imp/fallback.rs:
