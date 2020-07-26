@@ -1,13 +1,21 @@
 use std::fmt::{Display, Formatter, self};
 use std::collections::BTreeMap;
+use serde::{Serialize, Deserialize};
+use std::collections::VecDeque;
 
-#[derive(Clone, Default, Debug)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct Progress {
     name: String,
     description: String,
     percentage: i32,
     level: i32,
     subs: Option<BTreeMap<String, Progress>>,
+}
+
+#[derive(Clone, Default, Debug)]
+pub struct ProgressDB {
+    pub name: String,
+    pub content: String,
 }
 
 impl Progress {
@@ -21,6 +29,11 @@ impl Progress {
         }
     }
 
+    pub fn get_name(&self) -> &str {
+        return &self.name;
+    }
+
+    // 이걸 좀 더 체계적으로 변경해야 겠지 싶다. 
     pub fn add_sub(&mut self, mut progress: Progress) {
         // Make subs Some if no sub progress exists
         if let None = self.subs {
@@ -36,8 +49,39 @@ impl Progress {
 
 impl<'a> Progress {
     pub fn get_subs(&mut self) -> Option<&mut BTreeMap<String, Progress>> {
+        //println!("GETTING SUBS");
+        //println!("{:?}", self.subs);
         return self.subs.as_mut();
     }
+
+    pub fn add_to_sub(progress: Option<&'a mut Progress>, path : &'a mut VecDeque<String>, new: &'a Progress) -> Option<&'a mut Progress> {
+        if let Some(handled) = progress {
+            let new_progress: &mut Progress;
+            if path.len() == 0 {
+                handled.add_sub(new.clone());
+                None
+            } else {
+                new_progress = handled.get_subs().expect("ERR 1 WUT").get_mut(&path[0]).expect("ERR 2");
+                path.pop_front();
+                Progress::add_to_sub(Some(new_progress), path, new)
+            }
+        } else{
+            None
+        }
+    }
+
+    //pub fn get_progress(progress: &'a mut Progress, path : Vec<&str>) -> Option<&'a mut Progress> {
+        //if let Some(btreemap) = progress.get_subs() {
+            //Some(btreemap.get(path[0]).unwrap())
+        //} else {
+            //None
+        //}
+    //}
+
+    //pub fn get_progress(&mut self, path : Vec<&str>) -> Option<&mut Progress> {
+        //let mut current_value: &mut Progress = self;
+        //self.get_progress(current_value = current_value.subs.as_ref().unwrap().get(item).as_mut().unwrap())
+    //}
 }
 
 impl Display for Progress {
