@@ -73,18 +73,21 @@ impl<'a> Progress {
         }
     }
 
-    //pub fn get_progress(progress: &'a mut Progress, path : Vec<&str>) -> Option<&'a mut Progress> {
-        //if let Some(btreemap) = progress.get_subs() {
-            //Some(btreemap.get(path[0]).unwrap())
-        //} else {
-            //None
-        //}
-    //}
-
-    //pub fn get_progress(&mut self, path : Vec<&str>) -> Option<&mut Progress> {
-        //let mut current_value: &mut Progress = self;
-        //self.get_progress(current_value = current_value.subs.as_ref().unwrap().get(item).as_mut().unwrap())
-    //}
+    pub fn delete_from_sub(progress: Option<&'a mut Progress>, path : &'a mut VecDeque<String>) -> Option<&'a mut Progress> {
+        if let Some(handled) = progress {
+            let new_progress: &mut Progress;
+            if path.len() == 1 {
+                handled.get_subs_mut().unwrap().remove(&path[0].clone());
+                None
+            } else {
+                new_progress = handled.get_subs_mut().expect("ERR 1 WUT").get_mut(&path[0]).expect("ERR 2");
+                path.pop_front();
+                Progress::delete_from_sub(Some(new_progress), path)
+            }
+        } else{
+            None
+        }
+    }
 }
 
 impl Display for Progress {

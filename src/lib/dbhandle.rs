@@ -4,7 +4,7 @@ use rusqlite::{params, Connection, Result, NO_PARAMS};
 use ron;
 
 pub struct DBHanlde {
-    db_conn: Connection,
+    conn: Connection,
     table_name: String,
 }
 
@@ -13,15 +13,24 @@ pub struct DBHanlde {
 // except 'update' operation which is not tested Yet.
 // However not sure when multiple paths are given.
 // TODO Test Update Single operation
-// TODO Test Multipl path operation
+// TODO Test Multiple path operation
+// 
+// Currently Every opertation works for valid path given except update
 impl DBHanlde {
     pub fn new(dbname: String, table_name: String) -> Self {
-
-        // TODO Should create database if not exists
-        // TODO Should create table if not exists
+        let conn = Connection::open(dbname).expect("Failed to connect to db");
+        conn.execute( 
+            &format!("CREATE TABLE IF NOT EXISTS {} 
+                (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                 name TEXT NOT NULL UNIQUE,
+                 content TEXT NOT NULL
+                 );", 
+                &table_name), 
+            NO_PARAMS
+        ).expect("Faile dto create table");
 
         Self {  
-            db_conn: Connection::open(dbname).expect("Failed to connect to db"),
+            conn,
             table_name,
         }
     }
@@ -31,7 +40,7 @@ impl DBHanlde {
     pub fn create (&self, mut path: VecDeque<String>, progress: Progress) {
         if path.len() == 0 { // No path is given which means insert to root directory
             // Directly Insert to as a new progress
-            self.db_conn.execute(
+            self.conn.execute(
                 &format!("INSERT INTO {} (name, content) VALUES (?1, ?2)", self.table_name),
                 params![
                     progress.get_name(),// Name of the progress
@@ -40,20 +49,20 @@ impl DBHanlde {
             ).expect("Failed to Create");
         } else {
             // Get first path Progress, which is base progress
-            let read_progress: String = self.db_conn.query_row(
-                &format!("SELECT name FROM {} WHERE name = ?1", self.table_name),
+            let read_progress: String = self.conn.query_row(
+                &format!("SELECT content FROM {} WHERE name = ?1", self.table_name),
                     params![path[0]], 
                     |row|{
-                        let name: String = row.get(0)?;
-                        Ok(name)
+                        let content: String = row.get(0)?;
+                        Ok(content)
                     }
                 ).expect("Failed to read progress by name");
             
             let mut read_progress: Progress = ron::from_str(&read_progress).unwrap();
             let name = path.pop_front().unwrap();
             Progress::add_to_sub(Some(&mut read_progress), &mut path.clone(), &progress);
-            self.db_conn.execute(
-                &format!("UPDATE {} SET content = ?2 WHERE name = ?1", self.table_name), 
+            self.conn.execute(
+                &format!("UPDATE {} SET content = ?1 WHERE name = ?2", self.table_name), 
                 params![
                     ron::to_string(&read_progress).unwrap(),
                     name
@@ -63,9 +72,10 @@ impl DBHanlde {
         }
     }
 
+    // For list and show command
     pub fn read (&self, mut path: VecDeque<String>) {
         if path.len() == 0 {
-            let mut stmt = self.db_conn.prepare(
+            let mut stmt = self.conn.prepare(
                 &format!("SELECT * FROM {}", self.table_name), 
             ).unwrap();
             let data_iter = stmt.query_map(NO_PARAMS, |row| {
@@ -81,35 +91,77 @@ impl DBHanlde {
                 println!("{}", ron::from_str::<Progress>(&data.unwrap().content).expect("ERR"));
             }
         } else {
-            let base_progress = self.db_conn.query_row(
-                &format!("SELECT content FROM {} WHERER name = ?1", self.table_name), 
+            let base_progress = self.conn.query_row(
+                &format!("SELECT content FROM {} WHERE name = ?1", self.table_name), 
                 params![path[0]],
                 |row| {
                     let ron_string: String = row.get(0).unwrap();
                     Ok(ron_string)
                 }
             ).unwrap();
-            let mut base_progress: &Progress = &ron::from_str(&base_progress).unwrap();
+            let mut target_progress: &Progress = &ron::from_str(&base_progress).unwrap();
             path.pop_front();
             for item in path {
-                base_progress = base_progress.get_subs().unwrap().get(&item).unwrap();
+                target_progress = target_progress.get_subs().unwrap().get(&item).unwrap();
             }
-            println!("{}", base_progress);
+            println!("{}", target_progress);
         }
     }
 
     pub fn update (&self, mut path: VecDeque<String>, progress: Progress) {
-
-    }
-
-    pub fn delete (&self, mut path: VecDeque<String>) {
         if path.len() == 1 {
-            self.db_conn.execute(
+            self.conn.execute(
                 &format!("DELETE FROM {} WHERE name = ?1", self.table_name), 
                 params![path[0]]
             );
         } else {
+            let base_progress = self.conn.query_row(
+                &format!("SELECT content FROM {} WHERE name = ?1", self.table_name), 
+                params![path[0]],
+                |row| {
+                    let ron_string: String = row.get(0).unwrap();
+                    Ok(ron_string)
+                }
+            ).unwrap();
+            let mut target_progress: Progress = ron::from_str(&base_progress).unwrap();
+            let name = path.pop_front().unwrap();
+            Progress::delete_from_sub(Some(&mut target_progress), &mut path);
+            self.conn.execute(
+                &format!("UPDATE {} SET content = ?1 WHERE name = ?2", self.table_name), 
+                params![
+                    ron::to_string(&target_progress).unwrap(),
+                    name
+                ]
+            );
+        }
+    }
+    }
 
+    pub fn delete (&self, mut path: VecDeque<String>) {
+        if path.len() == 1 {
+            self.conn.execute(
+                &format!("DELETE FROM {} WHERE name = ?1", self.table_name), 
+                params![path[0]]
+            );
+        } else {
+            let base_progress = self.conn.query_row(
+                &format!("SELECT content FROM {} WHERE name = ?1", self.table_name), 
+                params![path[0]],
+                |row| {
+                    let ron_string: String = row.get(0).unwrap();
+                    Ok(ron_string)
+                }
+            ).unwrap();
+            let mut target_progress: Progress = ron::from_str(&base_progress).unwrap();
+            let name = path.pop_front().unwrap();
+            Progress::delete_from_sub(Some(&mut target_progress), &mut path);
+            self.conn.execute(
+                &format!("UPDATE {} SET content = ?1 WHERE name = ?2", self.table_name), 
+                params![
+                    ron::to_string(&target_progress).unwrap(),
+                    name
+                ]
+            );
         }
     }
 }
