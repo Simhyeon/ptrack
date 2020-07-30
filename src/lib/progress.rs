@@ -1,21 +1,11 @@
 use std::fmt::{Display, Formatter, self};
-use std::collections::BTreeMap;
-use serde::{Serialize, Deserialize};
-use std::collections::VecDeque;
-
-#[derive(Clone, Default, Debug, Serialize, Deserialize)]
-pub struct Progress {
-    name: String,
-    description: String,
-    percentage: i32,
-    level: i32,
-    subs: Option<BTreeMap<String, Progress>>,
-}
 
 #[derive(Clone, Default, Debug)]
-pub struct ProgressDB {
+pub struct Progress {
     pub name: String,
-    pub content: String,
+    pub description: String,
+    pub marked: bool,
+    pub subs: Option<Vec<Progress>>,
 }
 
 impl Progress {
@@ -23,8 +13,7 @@ impl Progress {
         Self {
             name: String::from(name),
             description: String::from(description),
-            percentage: 0,
-            level: 0,
+            marked: false,
             subs: None,
         }
     }
@@ -33,60 +22,8 @@ impl Progress {
         return &self.name;
     }
 
-    // 이걸 좀 더 체계적으로 변경해야 겠지 싶다. 
-    pub fn add_sub(&mut self, mut progress: Progress) {
-        // Make subs Some if no sub progress exists
-        if let None = self.subs {
-            self.subs.replace(BTreeMap::new());
-        } 
-
-        progress.level = self.level + 1; 
-        let mut new = self.subs.take().unwrap();
-        new.insert(progress.name.clone(), progress);
-        self.subs.replace(new);
-    }
-}
-
-impl<'a> Progress {
-    pub fn get_subs(&self) -> Option<&BTreeMap<String, Progress>> {
-        return self.subs.as_ref();
-    }
-    pub fn get_subs_mut(&mut self) -> Option<&mut BTreeMap<String, Progress>> {
-        //println!("GETTING SUBS");
-        //println!("{:?}", self.subs);
-        return self.subs.as_mut();
-    }
-
-    pub fn add_to_sub(progress: Option<&'a mut Progress>, path : &'a mut VecDeque<String>, new: &'a Progress) -> Option<&'a mut Progress> {
-        if let Some(handled) = progress {
-            let new_progress: &mut Progress;
-            if path.len() == 0 {
-                handled.add_sub(new.clone());
-                None
-            } else {
-                new_progress = handled.get_subs_mut().expect("ERR 1 WUT").get_mut(&path[0]).expect("ERR 2");
-                path.pop_front();
-                Progress::add_to_sub(Some(new_progress), path, new)
-            }
-        } else{
-            None
-        }
-    }
-
-    pub fn delete_from_sub(progress: Option<&'a mut Progress>, path : &'a mut VecDeque<String>) -> Option<&'a mut Progress> {
-        if let Some(handled) = progress {
-            let new_progress: &mut Progress;
-            if path.len() == 1 {
-                handled.get_subs_mut().unwrap().remove(&path[0].clone());
-                None
-            } else {
-                new_progress = handled.get_subs_mut().expect("ERR 1 WUT").get_mut(&path[0]).expect("ERR 2");
-                path.pop_front();
-                Progress::delete_from_sub(Some(new_progress), path)
-            }
-        } else{
-            None
-        }
+    pub fn get_desc(&self) -> &str {
+        return &self.description;
     }
 }
 
@@ -94,12 +31,12 @@ impl Display for Progress {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 
         // Put header before each level of progresses
-        for _ in  0..self.level {
-            write!(f, "    ").expect("Failed to print header characters");
-        }
-        if self.level != 0 {
-            write!(f, "|--").expect("Failed to print header characters");
-        }
+        //for _ in  0..self.level {
+            //write!(f, "    ").expect("Failed to print header characters");
+        //}
+        //if self.level != 0 {
+            //write!(f, "|--").expect("Failed to print header characters");
+        //}
 
         // Cut off description if too long Hard cap as 20 characters.
         // Should be decided by the width of terminal
@@ -119,9 +56,9 @@ impl Display for Progress {
 
         // Write all informations formatter
         // recursion occurs if more than one subprogress exist
-        write!(f, "[{}]-[{}%]--> \"{}\"\n", self.name , self.percentage, desc_display).expect("Failed to read name and percentage");
-        if let Some(map) = &self.subs {
-            for value in map.values() {
+        write!(f, "[{}]-[{}%]--> \"{}\"\n", self.name, 0 ,desc_display).expect("Failed to read name and percentage");
+        if let Some(vec) = &self.subs {
+            for value in vec {
                 write!(f, "{}", value).expect("Failed to read sub progresses");
             }
         }

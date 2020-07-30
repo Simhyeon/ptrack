@@ -67,22 +67,21 @@ impl Arguments {
             .conflicts_with_all(&["list", "create" ,"show", "description", "update"])
             .about("Delete the progress you want to set");
 
+        // Name 또는 desription 그리고 전부 받을 수 있도록 해야 한다. 
         let update_option = Arg::with_name("update")
             .short('u')
             .long("update")
             .requires("path")
             .requires("name")
             .requires("description")
-            .conflicts_with_all(&["list", "create" ,"show", "description", "delete"])
+            .conflicts_with_all(&["list", "create" ,"show", "delete"])
             .about("Update the progress");
 
 
         let path_option = Arg::with_name("path")
             .short('p')
             .long("path")
-            .use_delimiter(true)
-            //.empty_values(true)
-            .value_delimiter("/")
+            .takes_value(true)
             .conflicts_with("list")
             .about("Specifies path that you want to modify");
 
